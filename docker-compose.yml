@@ -1,6 +1,6 @@
 version: '3'
 services:
-  db:
+  mariadb:
     image: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: example
@@ -9,6 +9,8 @@ services:
       MYSQL_PASSWORD: 123456
     volumes:
       - ./database:/var/lib/mysql
+    ports:
+      - "3306:3306"
   wildfly:
     image: jboss/wildfly:15.0.1.Final
     ports:
@@ -16,13 +18,18 @@ services:
       - "9990:9990"
     volumes:
       - ./wildfly/deployments:/opt/jboss/wildfly/standalone/deployments
-      - ./wildfly/config:/opt/jboss/wildfly/standalone/configuration
       - ./wildfly/modules/system/layers/base/org/mariadb/jdbc/main:/opt/jboss/wildfly/modules/system/layers/base/org/mariadb/jdbc/main
+      - ./wildfly/config/standalone.xml:/opt/jboss/wildfly/standalone/configuration/standalone.xml
     environment:
       - DB_URL=jdbc:mysql://db:3306/llacta_db
       - DB_USER=llacta.user
       - DB_PASSWORD=123456
       - ADMIN_USER=admin
       - ADMIN_PASSWORD=admin
-    command: ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
-
+    depends_on:
+      - mariadb
+    command: >
+      sh -c '
+        chown -R root:root /opt/jboss/wildfly/standalone/deployments
+        chmod -R 777 /opt/jboss/wildfly/standalone/deployments
+        /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0'
