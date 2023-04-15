@@ -13,6 +13,7 @@ services:
       - "3306:3306"
   wildfly:
     image: jboss/wildfly:15.0.1.Final
+    user: root # se agrega esta opción para especificar el usuario que se utilizará para ejecutar el contenedor
     ports:
       - "8080:8080"
       - "9990:9990"
